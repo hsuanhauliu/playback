@@ -1,6 +1,9 @@
 # AI
 .claude/
 
+# Built artifacts
+docs/
+
 # Logs
 logs
 *.log

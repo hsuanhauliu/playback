@@ -1,0 +1,50 @@
+name: Build docs
+
+# Rebuilds the static site into docs/ so GitHub Pages (Settings → Pages →
+# "Deploy from a branch", main / docs) always serves the current source.
+on:
+  push:
+    branches: [main]
+    # Without this the workflow's own docs/ commit would retrigger it.
+    paths-ignore:
+      - 'docs/**'
+      - 'README.md'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-docs
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: Commit docs/ if it changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- docs; then
+            echo "docs/ already up to date"
+            exit 0
+          fi
+          git add docs
+          git commit -m "chore: rebuild docs [skip ci]"
+          git push

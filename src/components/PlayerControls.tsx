@@ -30,6 +30,8 @@ function Scrubber({ value, max, onSeek }: ScrubberProps) {
 
   const pct = max > 0 ? Math.min(value / max, 1) : 0;
 
+  // The row is taller than the visible 4px track so the drag target stays
+  // thumb-friendly; the extra height is transparent padding around the bar.
   return (
     <div
       ref={trackRef}
@@ -50,7 +52,7 @@ function Scrubber({ value, max, onSeek }: ScrubberProps) {
       }}
       onPointerUp={() => setDragging(false)}
       onPointerLeave={() => setHoverPct(null)}
-      className="group relative flex h-5 cursor-pointer touch-none items-center"
+      className="group relative flex h-6 cursor-pointer touch-none items-center"
     >
       {/* track */}
       <div className="relative h-1 w-full overflow-hidden rounded-full bg-surface-3">
@@ -108,22 +110,43 @@ export function PlayerControls({
   onSpeedChange,
 }: Props) {
   return (
-    <div className="panel flex shrink-0 flex-col gap-1.5 px-3 py-2">
-      <Scrubber value={currentTime} max={duration} onSeek={onSeek} />
+    <div className="panel flex shrink-0 flex-col gap-0.5 px-2 py-1.5">
+      {/* The clock rides beside the scrubber, which has spare width to give.
+          That keeps the transport row down to two groups so it never wraps,
+          however wide the frame number grows. */}
+      <div className="flex items-center gap-2">
+        <div className="min-w-0 flex-1">
+          <Scrubber value={currentTime} max={duration} onSeek={onSeek} />
+        </div>
+        <div className="flex shrink-0 items-center gap-1.5 font-mono text-[11px] tabular-nums">
+          {linked && <Icon name="link" size={12} className="shrink-0 text-accent-text" />}
+          <span className="text-fg">{formatTime(currentTime)}</span>
+          <span className="hidden text-faint sm:inline">/ {formatTime(duration)}</span>
+          <span className="text-muted">
+            f{frame}
+            <span className="hidden text-faint sm:inline">/{totalFrames}</span>
+          </span>
+        </div>
+      </div>
 
-      <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 sm:justify-between">
-        <div className="flex shrink-0 items-center gap-1">
-          <IconButton icon="stepBack" label="Previous frame  ·  ←" onClick={() => onStep(-1)} />
+      <div className="flex items-center justify-between gap-1.5">
+        <div className="flex shrink-0 items-center gap-0.5">
+          <IconButton
+            icon="stepBack"
+            size="sm"
+            label="Previous frame  ·  ←"
+            onClick={() => onStep(-1)}
+          />
           <button
             type="button"
             onClick={onTogglePlay}
             title={playing ? "Pause  ·  Space" : "Play  ·  Space"}
             aria-label={playing ? "Pause" : "Play"}
-            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-accent-fg shadow-sm transition-colors duration-100 hover:bg-accent-hover"
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-accent-fg shadow-sm transition-colors duration-100 hover:bg-accent-hover"
           >
             {/* nudge the play triangle so it reads optically centred */}
             <span className={clsx("inline-flex", !playing && "translate-x-px")}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
                 {playing ? (
                   <>
                     <rect x="6.5" y="4.5" width="4" height="15" rx="1.2" />
@@ -135,27 +158,15 @@ export function PlayerControls({
               </svg>
             </span>
           </button>
-          <IconButton icon="stepForward" label="Next frame  ·  →" onClick={() => onStep(1)} />
+          <IconButton
+            icon="stepForward"
+            size="sm"
+            label="Next frame  ·  →"
+            onClick={() => onStep(1)}
+          />
         </div>
 
-        <div className="order-3 flex shrink-0 items-center gap-2 font-mono text-xs tabular-nums sm:order-none">
-          {linked && (
-            <span
-              title="Linked — these controls drive both clips"
-              className="inline-flex h-5 w-5 items-center justify-center rounded bg-accent-soft text-accent-text ring-1 ring-inset ring-accent-ring"
-            >
-              <Icon name="link" size={11} />
-            </span>
-          )}
-          <span className="text-fg">{formatTime(currentTime)}</span>
-          <span className="text-faint">/ {formatTime(duration)}</span>
-          <span className="rounded bg-surface-2 px-1.5 py-0.5 text-[10px] text-muted">
-            f{frame}
-            <span className="text-faint">/{totalFrames}</span>
-          </span>
-        </div>
-
-        <div className="flex shrink-0 items-center gap-0.5 rounded-lg bg-surface-2 p-0.5">
+        <div className="flex shrink-0 items-center gap-px rounded-md bg-surface-2 p-0.5">
           {speeds.map((s) => (
             <button
               key={s}
@@ -163,7 +174,7 @@ export function PlayerControls({
               onClick={() => onSpeedChange(s)}
               aria-pressed={speed === s}
               className={clsx(
-                "min-w-10 shrink-0 rounded-md px-2 py-1 font-mono text-[11px] tabular-nums transition-colors duration-100",
+                "shrink-0 rounded px-1 py-1 font-mono text-[10px] leading-none tabular-nums transition-colors duration-100 sm:px-1.5",
                 speed === s
                   ? "bg-surface text-accent-text shadow-sm"
                   : "text-faint hover:text-muted",

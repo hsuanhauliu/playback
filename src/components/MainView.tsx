@@ -97,7 +97,7 @@ export function MainView() {
   ] as const;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3 p-3">
+    <div className="flex min-h-0 flex-1 flex-col gap-2 p-2 sm:gap-3 sm:p-3">
       <DrawToolbar
         tool={tool}
         onToolChange={setTool}
@@ -119,7 +119,7 @@ export function MainView() {
           />
         </div>
       ) : (
-        <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 md:grid-cols-2">
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-2 md:grid-cols-2 md:gap-3">
           {panes.map(({ clip, label, videoRef, drawingRef }, i) =>
             clip ? (
               <VideoStage
