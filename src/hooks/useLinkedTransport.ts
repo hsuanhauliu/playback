@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 import { DEFAULT_FPS } from "./useVideoController";
+import { pauseMedia, playMedia } from "../lib/media";
 
 type VideoRef = React.RefObject<HTMLVideoElement | null>;
 
@@ -55,7 +56,7 @@ export function useLinkedTransport(refs: [VideoRef, VideoRef], linked: boolean) 
       if (!both) return;
       const delta = (direction * frames) / DEFAULT_FPS;
       both.forEach((video) => {
-        video.pause();
+        pauseMedia(video);
         if (!Number.isFinite(video.duration)) return;
         video.currentTime = clamp(video.currentTime + delta, 0, video.duration);
       });
@@ -68,7 +69,7 @@ export function useLinkedTransport(refs: [VideoRef, VideoRef], linked: boolean) 
     if (!both) return;
 
     if (both.some((v) => !v.paused)) {
-      both.forEach((v) => v.pause());
+      both.forEach(pauseMedia);
       return;
     }
 
@@ -84,7 +85,7 @@ export function useLinkedTransport(refs: [VideoRef, VideoRef], linked: boolean) 
         video.currentTime = clamp(starts[i], 0, video.duration || 0);
       });
     }
-    both.forEach((v) => void v.play());
+    both.forEach((v) => void playMedia(v));
   }, [pair]);
 
   const setSpeed = useCallback(
@@ -125,7 +126,7 @@ export function useLinkedTransport(refs: [VideoRef, VideoRef], linked: boolean) 
     raf = requestAnimationFrame(tick);
 
     const both = pair();
-    const onEnded = () => both?.forEach((v) => v.pause());
+    const onEnded = () => both?.forEach(pauseMedia);
     both?.forEach((v) => v.addEventListener("ended", onEnded));
 
     return () => {

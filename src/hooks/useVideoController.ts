@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { pauseMedia, playMedia, resumeIfUnintended } from "../lib/media";
 
 export const SPEEDS = [0.1, 0.25, 0.5, 1] as const;
 export const DEFAULT_FPS = 30;
@@ -20,7 +21,12 @@ export function useVideoController(
 
     const onLoaded = () => setDuration(video.duration || 0);
     const onPlay = () => setPlaying(true);
-    const onPause = () => setPlaying(false);
+    const onPause = () => {
+      setPlaying(false);
+      // Undo a pause the app never asked for (Chrome power-saving on silent
+      // clips, which a seek can trigger).
+      resumeIfUnintended(video);
+    };
     const onTime = () => setCurrentTime(video.currentTime);
     // Keeps the readout honest when a linked pane drives this element.
     const onRate = () => setSpeed(video.playbackRate);
@@ -66,9 +72,9 @@ export function useVideoController(
       if (video.duration && video.currentTime >= video.duration - 1e-3) {
         video.currentTime = 0;
       }
-      void video.play();
+      void playMedia(video);
     } else {
-      video.pause();
+      pauseMedia(video);
     }
   }, [videoRef]);
 
@@ -86,7 +92,7 @@ export function useVideoController(
     (direction: 1 | -1, frames = 1) => {
       const video = videoRef.current;
       if (!video) return;
-      video.pause();
+      pauseMedia(video);
       seek(video.currentTime + (direction * frames) / DEFAULT_FPS);
     },
     [videoRef, seek],

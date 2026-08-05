@@ -30,6 +30,13 @@ function Scrubber({ value, max, onSeek }: ScrubberProps) {
 
   const pct = max > 0 ? Math.min(value / max, 1) : 0;
 
+  const endDrag = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    setDragging(false);
+    if (e.currentTarget.hasPointerCapture?.(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
+  }, []);
+
   // The row is taller than the visible 4px track so the drag target stays
   // thumb-friendly; the extra height is transparent padding around the bar.
   return (
@@ -48,9 +55,19 @@ function Scrubber({ value, max, onSeek }: ScrubberProps) {
       }}
       onPointerMove={(e) => {
         setHoverPct(pctFromEvent(e.clientX));
-        if (dragging) onSeek(pctFromEvent(e.clientX) * max);
+        if (!dragging) return;
+        // A drag can end without a pointerup — a cancelled touch gesture, or a
+        // mouse released off-window. Either would leave `dragging` stuck on and
+        // turn every later hover into a seek, so bail out when no button is held.
+        if (e.pointerType === "mouse" && e.buttons === 0) {
+          setDragging(false);
+          return;
+        }
+        onSeek(pctFromEvent(e.clientX) * max);
       }}
-      onPointerUp={() => setDragging(false)}
+      onPointerUp={endDrag}
+      onPointerCancel={endDrag}
+      onLostPointerCapture={() => setDragging(false)}
       onPointerLeave={() => setHoverPct(null)}
       className="group relative flex h-6 cursor-pointer touch-none items-center"
     >
