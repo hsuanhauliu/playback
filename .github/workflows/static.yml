@@ -1,5 +1,9 @@
 name: Deploy to GitHub Pages
 
+# docs/ is gitignored, so it does not exist in a fresh checkout — this workflow
+# has to build it before uploading. Without the build steps the upload fails
+# with "tar: docs: Cannot open: No such file or directory".
+
 on:
   push:
     branches: ["main"]
@@ -23,21 +27,44 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # Vite 8 needs 20.19+/22.12+; pin the major so a stale 20.x cannot
+          # silently break the build.
+          node-version: 22
           cache: 'npm'
+
       - name: Install dependencies
         run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
       - name: Build
         run: npm run build
+
+      - name: Verify build output
+        # Fails here with a readable message rather than inside tar.
+        run: |
+          if [ ! -f docs/index.html ]; then
+            echo "::error::Build finished but docs/index.html is missing."
+            echo "Check build.outDir in vite.config.ts — it must be 'docs'."
+            ls -la
+            exit 1
+          fi
+          echo "docs/ contents:"
+          ls -la docs
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: './docs'
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
