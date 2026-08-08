@@ -1,4 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
   <rect width="32" height="32" rx="8" fill="#00c88f"/>
-  <path d="M12.5 9.5v13a.8.8 0 0 0 1.23.674l10.2-6.5a.8.8 0 0 0 0-1.348l-10.2-6.5A.8.8 0 0 0 12.5 9.5z" fill="#04150f"/>
+  <!-- Angle mark: the measurement this app is built around.
+       Nudged up so the shape sits optically centred in the tile. -->
+  <g transform="translate(0 -1.2)">
+    <g fill="none" stroke="#04150f" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8.5 23.5h15" stroke-width="2.8"/>
+      <path d="M8.5 23.5L21 11" stroke-width="2.8"/>
+      <path d="M16 23.5a7.5 7.5 0 0 0-2.2-5.3" stroke-width="1.9" opacity=".85"/>
+    </g>
+    <circle cx="8.5" cy="23.5" r="2.4" fill="#04150f"/>
+  </g>
 </svg>

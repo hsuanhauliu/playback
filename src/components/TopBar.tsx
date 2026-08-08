@@ -8,7 +8,7 @@ function Wordmark({ className }: { className?: string }) {
   return (
     <div className={clsx("flex items-center gap-2", className)}>
       <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-accent text-accent-fg">
-        <Icon name="play" size={12} />
+        <Icon name="mark" size={15} />
       </div>
       <span className="text-[13px] font-semibold tracking-tight text-fg">Playback</span>
     </div>

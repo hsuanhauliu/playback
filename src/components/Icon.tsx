@@ -24,7 +24,8 @@ export type IconName =
   | "film"
   | "single"
   | "compare"
-  | "link";
+  | "link"
+  | "mark";
 
 const PATHS: Record<IconName, JSX.Element> = {
   cursor: <path d="M5 3l6.5 15.5 2.2-6.8 6.8-2.2L5 3z" />,
@@ -116,6 +117,16 @@ const PATHS: Record<IconName, JSX.Element> = {
       <path d="M10 13.5a4.5 4.5 0 0 0 6.8.5l2.7-2.7a4.5 4.5 0 0 0-6.4-6.4l-1.5 1.5" />
       <path d="M14 10.5a4.5 4.5 0 0 0-6.8-.5l-2.7 2.7a4.5 4.5 0 0 0 6.4 6.4l1.5-1.5" />
     </>
+  ),
+  /* Brand mark — the angle measurement this app is built around. The nudge
+     keeps the shape optically centred rather than sitting low. */
+  mark: (
+    <g transform="translate(0 -0.6)">
+      <path d="M5.5 18h13" strokeWidth={2.4} />
+      <path d="M5.5 18L16.5 7" strokeWidth={2.4} />
+      <path d="M12 18a6.5 6.5 0 0 0-1.9-4.6" strokeWidth={1.7} opacity={0.85} />
+      <circle cx="5.5" cy="18" r="2" fill="currentColor" stroke="none" />
+    </g>
   ),
   film: (
     <>
