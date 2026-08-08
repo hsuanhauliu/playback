@@ -119,6 +119,14 @@ export function VideoStage({
         <span className="pointer-events-none absolute right-2.5 top-2.5 max-w-[60%] truncate rounded-md bg-black/45 px-2 py-1 text-[11px] text-white/80 backdrop-blur-sm">
           {clip.name}
         </span>
+
+        {controller.decodeError && (
+          <div className="absolute inset-x-3 bottom-3 rounded-lg bg-black/80 px-3 py-2 text-[11px] leading-relaxed text-white/90 backdrop-blur-sm">
+            <span className="font-medium text-red-300">Playback stopped — the browser could not decode this clip.</span>{" "}
+            Firefox on macOS sometimes fails here after seeking. Re-import the clip, or try
+            Safari or Chrome.
+          </div>
+        )}
       </div>
 
       <PlayerControls

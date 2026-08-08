@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 import { DEFAULT_FPS } from "./useVideoController";
-import { pauseMedia, playMedia } from "../lib/media";
+import { pauseMedia, playMedia, seekMedia } from "../lib/media";
 
 type VideoRef = React.RefObject<HTMLVideoElement | null>;
 
@@ -41,10 +41,7 @@ export function useLinkedTransport(refs: [VideoRef, VideoRef], linked: boolean) 
       if (!both) return;
       const gap = gapRef.current;
       const targets = source === 0 ? [time, time + gap] : [time - gap, time];
-      both.forEach((video, i) => {
-        if (!Number.isFinite(video.duration)) return;
-        video.currentTime = clamp(targets[i], 0, video.duration);
-      });
+      both.forEach((video, i) => seekMedia(video, targets[i]));
     },
     [pair],
   );
@@ -57,8 +54,7 @@ export function useLinkedTransport(refs: [VideoRef, VideoRef], linked: boolean) 
       const delta = (direction * frames) / DEFAULT_FPS;
       both.forEach((video) => {
         pauseMedia(video);
-        if (!Number.isFinite(video.duration)) return;
-        video.currentTime = clamp(video.currentTime + delta, 0, video.duration);
+        seekMedia(video, video.currentTime + delta);
       });
     },
     [pair],
