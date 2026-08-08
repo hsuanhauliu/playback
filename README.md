@@ -71,17 +71,53 @@ Built with React 19, TypeScript, Vite, Tailwind CSS v4, and Zustand.
 
 ## Deploying to GitHub Pages
 
-`npm run build` writes the site to `docs/`, which is committed to the
-repository. Assets use relative URLs, so the build works from a project page,
-a user page, or a custom domain without any repo-specific configuration.
+`npm run build` writes the site to `docs/`. That folder is **gitignored** — it
+is built in CI rather than committed. Assets use relative URLs, so the build
+works from a project page, a user page, or a custom domain without any
+repo-specific configuration.
 
-To serve it, set **Settings → Pages → Source** to *Deploy from a branch*, and
-pick `main` / `docs`.
+The [deploy workflow](.github/workflows/static.yml) installs, lints, builds,
+and uploads `docs/` as a Pages artifact on every push to `main`. Set
+**Settings → Pages → Source** to *GitHub Actions*.
 
-The [`Build docs`](.github/workflows/build-docs.yml) workflow rebuilds `docs/`
-on every push to `main` and commits the result, so the published site always
-matches the source. You can still run `npm run build` and commit `docs/`
-yourself; the workflow only commits when the output actually differs.
+Because `docs/` is gitignored, the workflow must build it — a Pages workflow
+that only checks out and uploads `./docs` will fail with
+`tar: docs: Cannot open: No such file or directory`.
+
+## Browser support
+
+Chrome and Safari are the safest choices. Everything is decoded by the
+browser's own video stack, so what plays depends on the browser, not on this
+app.
+
+**Firefox struggles with some iPhone footage.** `.mov` clips — especially HEVC
+(H.265), which iPhones record by default — can fail to decode in Firefox on
+macOS, either refusing to open or dying mid-playback with:
+
+```
+NS_ERROR_DOM_MEDIA_DECODE_ERR — AppleVTDecoder::OnDecodeError
+```
+
+Once that happens the video element is finished and will not play again. The
+app detects it, rebuilds the decoder a few times, and if that fails shows a
+message on the clip rather than sitting there frozen.
+
+If a clip will not play in Firefox, open it in **Safari or Chrome**, or convert
+it to MP4/H.264:
+
+```bash
+ffmpeg -i input.mov -c:v libx264 -pix_fmt yuv420p -c:a aac output.mp4
+```
+
+This is not every `.mov` file — plain H.264 and HEVC `.mov` clips do play in
+Firefox in testing. It is specific encodings (10-bit HDR HEVC being the prime
+suspect) that break, so treat Firefox as best-effort for phone footage.
+
+> Note: `video.canPlayType()` cannot be used to warn about this up front. It is
+> unreliable in both directions — Firefox answers `"maybe"` for
+> `video/quicktime` and then fails, while Chrome answers `""` and plays the
+> file fine. Only the element's `error` event is trustworthy, which is what the
+> app listens to.
 
 ## Known limitations
 

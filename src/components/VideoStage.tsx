@@ -120,11 +120,26 @@ export function VideoStage({
           {clip.name}
         </span>
 
-        {controller.decodeError && (
+        {controller.mediaError && (
           <div className="absolute inset-x-3 bottom-3 rounded-lg bg-black/80 px-3 py-2 text-[11px] leading-relaxed text-white/90 backdrop-blur-sm">
-            <span className="font-medium text-red-300">Playback stopped — the browser could not decode this clip.</span>{" "}
-            Firefox on macOS sometimes fails here after seeking. Re-import the clip, or try
-            Safari or Chrome.
+            {controller.mediaError === "unsupported" ? (
+              <>
+                <span className="font-medium text-red-300">
+                  This browser can’t open this file.
+                </span>{" "}
+                Its container or codec isn’t supported — iPhone{" "}
+                <span className="font-mono">.mov</span> / HEVC clips are the usual culprit in
+                Firefox. Open it in Safari or Chrome, or convert it to MP4&nbsp;(H.264).
+              </>
+            ) : (
+              <>
+                <span className="font-medium text-red-300">
+                  Playback stopped — the browser could not decode this clip.
+                </span>{" "}
+                Firefox on macOS sometimes fails here after seeking. Re-import the clip, or
+                try Safari or Chrome.
+              </>
+            )}
           </div>
         )}
       </div>

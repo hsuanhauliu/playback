@@ -12,6 +12,9 @@ import {
 export const SPEEDS = [0.1, 0.25, 0.5, 1] as const;
 export const DEFAULT_FPS = 30;
 
+/** How playback failed, when it has. */
+export type MediaFailure = "unsupported" | "decode" | null;
+
 export function useVideoController(
   videoRef: React.RefObject<HTMLVideoElement | null>,
   { enabled = true }: { enabled?: boolean } = {},
@@ -20,8 +23,12 @@ export function useVideoController(
   const [speed, setSpeed] = useState<number>(1);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  /** True once the decoder has failed and reloading has stopped helping. */
-  const [decodeError, setDecodeError] = useState(false);
+  /**
+   * `unsupported` — the browser cannot open the file at all (container or
+   * codec it does not implement). `decode` — it opened, but the decoder failed
+   * and reloading stopped helping. Null while healthy.
+   */
+  const [mediaError, setMediaError] = useState<MediaFailure>(null);
   const rafRef = useRef<number | null>(null);
   const resumeAfterSeek = useRef(false);
   const seekRunActive = useRef(false);
@@ -69,13 +76,23 @@ export function useVideoController(
     // simply sits there looking frozen. Rebuild it; only report a failure once
     // reloading has stopped helping.
     const onError = () => {
-      if (recoverFromDecodeError(video)) {
-        setDecodeError(false);
+      const code = video.error?.code;
+
+      // The browser cannot open this container/codec — nothing to retry.
+      // `canPlayType` is no help here: Firefox answers "maybe" for
+      // video/quicktime and then fails, Chrome answers "" and plays it fine.
+      // The error event is the only trustworthy signal.
+      if (code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED) {
+        setMediaError("unsupported");
         return;
       }
-      if (video.error?.code === MediaError.MEDIA_ERR_DECODE) setDecodeError(true);
+      if (recoverFromDecodeError(video)) {
+        setMediaError(null);
+        return;
+      }
+      if (code === MediaError.MEDIA_ERR_DECODE) setMediaError("decode");
     };
-    const onLoadStart = () => setDecodeError(false);
+    const onLoadStart = () => setMediaError(null);
 
     video.addEventListener("loadedmetadata", onLoaded);
     video.addEventListener("play", onPlay);
@@ -169,7 +186,7 @@ export function useVideoController(
     duration,
     frame: Math.round(currentTime * DEFAULT_FPS),
     totalFrames: Math.round(duration * DEFAULT_FPS),
-    decodeError,
+    mediaError,
     togglePlay,
     seek,
     stepFrame,
